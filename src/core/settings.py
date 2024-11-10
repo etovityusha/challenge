@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # project apps
     "users",
+    "event_logs",
 ]
 
 MIDDLEWARE = [
@@ -76,6 +77,8 @@ CLICKHOUSE_URI = (
     f"{CLICKHOUSE_PROTOCOL}"
 )
 CLICKHOUSE_EVENT_LOG_TABLE_NAME = "event_log"
+
+EVENT_SAVER_TYPE = os.getenv("EVENT_SAVER_TYPE", "OUTBOX")
 
 AUTH_PASSWORD_VALIDATORS = [
     {
