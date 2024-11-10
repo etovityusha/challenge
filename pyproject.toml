@@ -57,3 +57,7 @@ target-version = "py311"
 
 [tool.ruff.lint.mccabe]
 max-complexity = 4
+
+[tool.black]
+line-length = 120
+target-version = ['py313']

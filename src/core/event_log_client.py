@@ -1,7 +1,7 @@
 import re
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, Protocol
 
 import clickhouse_connect
 import structlog
@@ -14,11 +14,16 @@ from core.base_model import Model
 logger = structlog.get_logger(__name__)
 
 EVENT_LOG_COLUMNS = [
-    'event_type',
-    'event_date_time',
-    'environment',
-    'event_context',
+    "event_type",
+    "event_date_time",
+    "environment",
+    "event_context",
 ]
+
+
+class EventLogInsertProtocol(Protocol):
+    def insert(self, data: list[Model]) -> None:
+        pass
 
 
 class EventLogClient:
@@ -27,7 +32,7 @@ class EventLogClient:
 
     @classmethod
     @contextmanager
-    def init(cls) -> Generator['EventLogClient']:
+    def init(cls) -> Generator["EventLogClient"]:
         client = clickhouse_connect.get_client(
             host=settings.CLICKHOUSE_HOST,
             port=settings.CLICKHOUSE_PORT,
@@ -40,7 +45,7 @@ class EventLogClient:
         try:
             yield cls(client)
         except Exception as e:
-            logger.error('error while executing clickhouse query', error=str(e))
+            logger.error("error while executing clickhouse query", error=str(e))
         finally:
             client.close()
 
@@ -56,15 +61,15 @@ class EventLogClient:
                 table=settings.CLICKHOUSE_EVENT_LOG_TABLE_NAME,
             )
         except DatabaseError as e:
-            logger.error('unable to insert data to clickhouse', error=str(e))
+            logger.error("unable to insert data to clickhouse", error=str(e))
 
     def query(self, query: str) -> Any:  # noqa: ANN401
-        logger.debug('executing clickhouse query', query=query)
+        logger.debug("executing clickhouse query", query=query)
 
         try:
             return self._client.query(query).result_rows
         except DatabaseError as e:
-            logger.error('failed to execute clickhouse query', error=str(e))
+            logger.error("failed to execute clickhouse query", error=str(e))
             return
 
     def _convert_data(self, data: list[Model]) -> list[tuple[Any]]:
@@ -79,6 +84,5 @@ class EventLogClient:
         ]
 
     def _to_snake_case(self, event_name: str) -> str:
-        result = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', event_name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', result).lower()
-
+        result = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", event_name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", result).lower()

@@ -13,6 +13,11 @@ superuser:
 shell:
 	docker compose run --rm app shell
 lint:
+	make black
+	make ruff
+ruff:
 	docker compose run --rm app ruff check --fix
+black:
+	docker compose run --rm app black .
 test:
 	docker compose run --rm app pytest -svv
